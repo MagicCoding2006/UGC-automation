@@ -1,0 +1,25 @@
+name: reelforge-avatar
+services:
+  avatar:
+    build: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      UGC_WORKER_TOKEN: ${UGC_WORKER_TOKEN:?Set a long worker token}
+      AVATAR_STEPS: ${AVATAR_STEPS:-40}
+    ports: ["127.0.0.1:8092:8092"]
+    volumes:
+      - models:/models
+      - outputs:/outputs
+      - cache:/cache
+    shm_size: 8gb
+    restart: unless-stopped
+volumes:
+  models:
+  outputs:
+  cache:

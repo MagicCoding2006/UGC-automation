@@ -1,0 +1,65 @@
+name: reelforge
+services:
+  api:
+    image: reelforge/control:local
+    build: .
+    env_file: .env
+    environment:
+      UGC_DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - studio-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  worker:
+    image: reelforge/control:local
+    env_file: .env
+    environment:
+      UGC_DATA_DIR: /app/data
+    command: ["python", "-m", "ugc.worker"]
+    volumes:
+      - studio-data:/app/data
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    stop_grace_period: 60s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  voice:
+    profiles: ["voice"]
+    build: ./workers/voice
+    env_file: .env
+    volumes:
+      - voice-cache:/models
+      - voice-output:/outputs
+    restart: unless-stopped
+    mem_limit: 4g
+  comfyui:
+    profiles: ["gpu"]
+    build: ./workers/comfyui
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - wan-models:/opt/ComfyUI/models
+      - wan-output:/opt/ComfyUI/output
+    restart: unless-stopped
+    shm_size: 4gb
+    mem_limit: 24g
+    # Internal Docker network only. Do not expose ComfyUI to the public internet.
+volumes:
+  studio-data:
+  voice-cache:
+  voice-output:
+  wan-models:
+  wan-output:

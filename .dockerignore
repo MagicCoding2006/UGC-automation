@@ -1,0 +1,11 @@
+.git
+.env
+.venv
+data
+models
+artifacts
+**/node_modules
+**/__pycache__
+apps/web/dist
+workers/comfyui/ComfyUI
+workers/infinitetalk/InfiniteTalk

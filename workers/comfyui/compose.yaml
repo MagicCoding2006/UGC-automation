@@ -1,0 +1,21 @@
+name: reelforge-wan
+services:
+  comfyui:
+    build: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports: ["127.0.0.1:8188:8188"]
+    volumes:
+      - models:/opt/ComfyUI/models
+      - output:/opt/ComfyUI/output
+    shm_size: 4gb
+    mem_limit: 24g
+    restart: unless-stopped
+volumes:
+  models:
+  output:
